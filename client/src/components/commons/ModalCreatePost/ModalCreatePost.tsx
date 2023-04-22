@@ -1,6 +1,6 @@
 import { Modal } from "@/components/commons";
 import { usePosts } from "@/hooks";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useLayoutEffect, useState } from "react";
 import constants from "./config/constants";
 import { FormAudiance, FormDefault, FormFeeling, FormTag } from "./sub";
 
@@ -38,6 +38,8 @@ const ModalCreatePost: FC<Props> = ({ isOpen, onClose }) => {
       case "default":
         if (postActive.format === 1) return constants.default;
         return constants.image;
+      case "defaultAndImage":
+        return constants.image;
       case "tag":
         return constants.tag;
       case "feeling":
@@ -57,7 +59,7 @@ const ModalCreatePost: FC<Props> = ({ isOpen, onClose }) => {
         setIsOpenAddImage(true);
       }
     }
-  }, [postCreate, postEdit, modeEditor]);
+  }, [postCreate, postEdit, modeEditor, formActive, setIsOpenAddImage]);
 
   useEffect(() => {
     return () => {

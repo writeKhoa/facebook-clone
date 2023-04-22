@@ -68,6 +68,7 @@ const Main: FC<Props> = ({ postsProps }) => {
 
   const handleOpenAddImage = () => {
     setIsOpenEditor((pre) => !pre);
+    setModeEditor("create");
     setFormActive("defaultAndImage");
   };
 
