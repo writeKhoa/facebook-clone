@@ -1,5 +1,5 @@
 import { Modal } from "@/components/commons";
-import { useAuth, usePosts } from "@/hooks";
+import { usePosts } from "@/hooks";
 import { FC, useEffect, useState } from "react";
 import constants from "./config/constants";
 import { FormAudiance, FormDefault, FormFeeling, FormTag } from "./sub";
@@ -10,53 +10,33 @@ interface Props {
 }
 
 const ModalCreatePost: FC<Props> = ({ isOpen, onClose }) => {
-  const { makeRequestWithAuth } = useAuth();
   const {
-    contentPost,
-    postEdit,
     modeEditor,
-    imageEdit,
-    imagePreview,
-    onInitPostEdit,
+    postCreate,
+    postEdit,
+    formActive,
+    setEditPostId,
+    onResetPostEdit,
+    setFormActive,
   } = usePosts();
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [formAcitve, setFormActive] = useState<
-    "default" | "tag" | "feeling" | "audiance"
-  >("default");
 
   const [isOpenAddImage, setIsOpenAddImage] = useState<boolean>(false);
 
-  const handleOpenAddImage = () => {
-    if (contentPost.background !== 0) {
-      return;
-    }
-    setIsOpenAddImage(true);
-  };
-  const handleCloseAddImage = () => setIsOpenAddImage(false);
+  const handleReturnDefault = () => setFormActive("default");
 
-  const handleReturnDefault = () => {
+  const handleCloseAndImage = () => {
     setFormActive("default");
-  };
-
-  const handleOpenTagForm = () => {
-    setFormActive("tag");
-  };
-
-  const handleOpenFeelingForm = () => {
-    setFormActive("feeling");
-  };
-
-  const handleOpenAudianceForm = () => {
-    setFormActive("audiance");
+    setIsOpenAddImage(false);
   };
 
   const height = () => {
+    const postActive = modeEditor === "edit" ? postEdit : postCreate;
     if (isOpenAddImage) {
       return constants.image;
     }
-    switch (formAcitve) {
+    switch (formActive) {
       case "default":
-        if (contentPost.format === 1) return constants.default;
+        if (postActive.format === 1) return constants.default;
         return constants.image;
       case "tag":
         return constants.tag;
@@ -68,36 +48,23 @@ const ModalCreatePost: FC<Props> = ({ isOpen, onClose }) => {
   };
 
   useEffect(() => {
-    if (imageEdit) {
-      setIsOpenAddImage(true);
+    if (modeEditor === "edit") {
+      if (!!postEdit.preImageUrl && !postEdit.isDiscardOldImage) {
+        setIsOpenAddImage(true);
+      }
+    } else {
+      if (!!postCreate.imageUpload || formActive === "defaultAndImage") {
+        setIsOpenAddImage(true);
+      }
     }
-  }, [imageEdit]);
+  }, [postCreate, postEdit, modeEditor]);
 
   useEffect(() => {
-    const abortController: AbortController | null = new AbortController();
-    const getData = async () => {
-      if (!!postEdit && modeEditor === "edit") {
-        try {
-          const data = await makeRequestWithAuth(
-            "get",
-            `/api/v1/posts/${postEdit}`
-          );
-          const { contentPost, headerPost } = data.__post;
-          onInitPostEdit(headerPost, contentPost, contentPost.imageUrl || "");
-        } catch (error) {
-          console.log({ error });
-        } finally {
-          setIsLoading(false);
-        }
-      } else {
-        setIsLoading(false);
-      }
-    };
-    getData();
     return () => {
-      abortController.abort();
+      onResetPostEdit();
+      setEditPostId("");
     };
-  }, [postEdit, modeEditor]);
+  }, []);
 
   return (
     <Modal isOpen={isOpen} wrapperId="modal-create-post">
@@ -110,38 +77,35 @@ const ModalCreatePost: FC<Props> = ({ isOpen, onClose }) => {
               height: height(),
             }}
           >
-            {isLoading ? (
-              <div
-                className="h-full bg-surface dark:bg-surfaceDark border border-divider dark:border-dividerDark rounded-lg"
-                style={{ width: 500 }}
-              >
-                <div onClick={onClose}>close</div>
-              </div>
-            ) : (
-              <>
-                <div
-                  className={`absolute top-0 left-0 w-full h-full ${
-                    formAcitve === "default" ? "" : "translate-x-full"
-                  } `}
-                >
-                  <FormDefault
-                    isOpenAddImage={isOpenAddImage}
-                    onClose={onClose}
-                    onOpenTagForm={handleOpenTagForm}
-                    onOpenFeelingForm={handleOpenFeelingForm}
-                    onOpenAudianceForm={handleOpenAudianceForm}
-                    onOpenAddImage={handleOpenAddImage}
-                    onCloseAddImage={handleCloseAddImage}
-                  />
-                </div>
+            <div
+              className={`absolute top-0 left-0 w-full h-full ${
+                formActive === "default" || formActive === "defaultAndImage"
+                  ? ""
+                  : "translate-x-full"
+              } `}
+            >
+              <FormDefault
+                isOpenAddImage={isOpenAddImage}
+                onClose={onClose}
+                onOpenTagForm={() => setFormActive("tag")}
+                onOpenFeelingForm={() => setFormActive("feeling")}
+                onOpenAudianceForm={() => setFormActive("audiance")}
+                onOpenAddImage={() => setIsOpenAddImage(true)}
+                onCloseAddImage={handleCloseAndImage}
+              />
+            </div>
 
-                <div
-                  className={`absolute top-0 left-0 w-full h-full ${
-                    formAcitve !== "default" ? "" : "translate-x-full"
-                  } `}
-                >
+            <div
+              className={`absolute top-0 left-0 w-full h-full ${
+                formActive !== "default" && formActive !== "defaultAndImage"
+                  ? ""
+                  : "translate-x-full"
+              } `}
+            >
+              {formActive !== "default" && formActive !== "defaultAndImage" && (
+                <>
                   {(() => {
-                    switch (formAcitve) {
+                    switch (formActive) {
                       case "feeling":
                         return (
                           <FormFeeling onReturnDefault={handleReturnDefault} />
@@ -156,9 +120,9 @@ const ModalCreatePost: FC<Props> = ({ isOpen, onClose }) => {
                         return <></>;
                     }
                   })()}
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

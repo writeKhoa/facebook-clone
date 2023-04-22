@@ -1,15 +1,16 @@
 import { audianceConfig } from "@/configs";
-import { usePosts } from "@/hooks";
+import { useEditorPostState, usePosts } from "@/hooks";
 import { FC, useEffect, useState } from "react";
 import { HeaderReturn } from "../../commons";
 import { AudianceItem } from "./sub";
 
 interface Props {
   onReturn: () => void;
+  // audiance: 1 | 2 | 3;
 }
 
 const FormAudiance: FC<Props> = ({ onReturn }) => {
-  const { postCreate, postEdit, modeEditor, setPostCreate, setPostEdit } =
+  const { modeEditor, postCreate, postEdit, setPostCreate, setPostEdit } =
     usePosts();
   const [audianceTemporary, setAudianceTemporary] = useState<1 | 2 | 3 | null>(
     null
@@ -20,25 +21,15 @@ const FormAudiance: FC<Props> = ({ onReturn }) => {
       if (modeEditor === "edit") {
         setPostEdit((pre) => {
           return {
-            image: {
-              ...pre.image,
-            },
-            post: {
-              ...pre.post,
-              audiance: audianceTemporary,
-            },
+            ...pre,
+            audiance: audianceTemporary,
           };
         });
       } else {
         setPostCreate((pre) => {
           return {
-            image: {
-              ...pre.image,
-            },
-            post: {
-              ...pre.post,
-              audiance: audianceTemporary,
-            },
+            ...pre,
+            audiance: audianceTemporary,
           };
         });
       }
@@ -52,11 +43,12 @@ const FormAudiance: FC<Props> = ({ onReturn }) => {
 
   useEffect(() => {
     if (modeEditor === "edit") {
-      setAudianceTemporary(postEdit.post.audiance);
+      setAudianceTemporary(postEdit.audiance);
     } else {
-      setAudianceTemporary(postCreate.post.audiance);
+      setAudianceTemporary(postCreate.audiance);
     }
-  }, [modeEditor]);
+  }, [modeEditor, postEdit, postCreate]);
+
   return (
     <div className="w-full h-full bg-surface dark:bg-surfaceDark rounded-lg border border-divider dark:border-dividerDark">
       <HeaderReturn title="Đối tượng của bài viết" onReturnDefault={onReturn} />

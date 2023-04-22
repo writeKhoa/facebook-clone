@@ -1,16 +1,14 @@
-import { LexicalEditor } from "@/components/commons";
+import { LexicalEditor, Modal } from "@/components/commons";
 import { CloseIcon } from "@/components/commons/Icons";
-import { useAuth, useEditorPostState, usePosts } from "@/hooks";
-import { User } from "@/models";
+import { LoadingCircelIcon } from "@/components/commons/Icons/Common.Icon";
+import { useAuth, usePosts } from "@/hooks";
+import { PostEditProps, User } from "@/models";
 import { FC, useEffect, useState } from "react";
 import Scrollbar from "react-custom-scrollbars-2";
 import { AddImage, AddSomethingToPost, UserAndAudiance } from "./sub";
-import { Modal } from "@/components/commons";
-import { LoadingCircelIcon } from "@/components/commons/Icons/Common.Icon";
 
 interface Props {
   isOpenAddImage: boolean;
-
   onOpenTagForm: () => void;
   onOpenFeelingForm: () => void;
   onOpenAudianceForm: () => void;
@@ -19,25 +17,8 @@ interface Props {
   onCloseAddImage: () => void;
 }
 
-const defaultContent = {
-  root: {
-    children: [
-      {
-        children: [],
-        direction: null,
-        format: "",
-        indent: 0,
-        type: "paragraph",
-        version: 1,
-      },
-    ],
-    direction: null,
-    format: "",
-    indent: 0,
-    type: "root",
-    version: 1,
-  },
-};
+const defaultContent =
+  '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
 const FormDefault: FC<Props> = ({
   isOpenAddImage,
@@ -50,69 +31,121 @@ const FormDefault: FC<Props> = ({
   onClose,
 }) => {
   const { user, makeRequestWithAuth } = useAuth();
-  const {
-    setPosts,
-    contentPost,
-    headerPost,
-    headerPostEdit,
-    modeEditor,
-    imageUpload,
-    onResetEditorState,
-  } = usePosts();
+  const { modeEditor, postCreate, postEdit, setPosts, onResetPostCreate } =
+    usePosts();
+
   const [isDisabled, setIsDisabled] = useState(false);
   const [isLoadingUploadPost, setIsLoadingUploadPost] =
     useState<boolean>(false);
 
+  const postActive = modeEditor === "edit" ? postEdit : postCreate;
+
+  const conditionToActiveSubmit =
+    postActive.content !== defaultContent ||
+    postActive.imageUpload ||
+    (modeEditor === "edit" && !!(postActive as PostEditProps)?.preImageUrl) ||
+    typeof postActive.feeling === "number" ||
+    (postActive?.tags && postActive?.tags?.length > 0);
+
+  const isActiveTag = !!postActive?.tags && postActive?.tags.length > 0;
+
+  const isActiveFeeling = typeof postActive.feeling === "number";
+
   const handleSubmitPost = async () => {
     try {
-      if (
-        contentPost.content === JSON.stringify(defaultContent) &&
-        !imageUpload
-      )
-        return;
+      if (!conditionToActiveSubmit) return;
       else {
-        setIsLoadingUploadPost(true);
-        const formData = new FormData();
-        formData.append("image", imageUpload as File);
-        formData.append("post", JSON.stringify(contentPost));
-        formData.append("headerPost", JSON.stringify(headerPost));
+        if (modeEditor === "edit") {
+          setIsLoadingUploadPost(true);
+          const formData = new FormData();
+          const tagged = !!postActive?.tags
+            ? postActive.tags.map((tag) => tag.tagId)
+            : [];
 
-        const data = await makeRequestWithAuth(
-          "post",
-          "/api/v1/posts/upload-multer",
-          formData
-        );
-        setPosts((pre) => {
-          return [
-            {
-              ...data.__post,
-              userId: {
-                _id: user?._id,
-                avatarUrl: user?.avatarUrl,
-                fullName: user?.fullName,
-              },
+          if (postActive.imageUpload) {
+            formData.append("image", postActive.imageUpload);
+          }
+          formData.append("post", JSON.stringify({ ...postActive, tagged }));
+          const data = await makeRequestWithAuth(
+            "put",
+            "/api/v1/posts/update",
+            formData
+          );
+          const newPost = {
+            ...data.__newPost,
+            userId: {
+              _id: user?._id,
+              avatarUrl: user?.avatarUrl,
+              fullName: user?.fullName,
             },
-            ...pre,
-          ];
-        });
+          };
+          setPosts((prevPosts) => {
+            const index = prevPosts.findIndex(
+              (post) => post._id === newPost._id
+            );
+            const updatedPosts = [...prevPosts];
+            updatedPosts[index] = newPost;
+            return updatedPosts;
+          });
+        } else {
+          setIsLoadingUploadPost(true);
+          const formData = new FormData();
+          const tagged = !!postActive?.tags
+            ? postActive.tags.map((tag) => tag.tagId)
+            : [];
+          if (postActive.imageUpload) {
+            formData.append("image", postActive.imageUpload);
+          }
+          formData.append("post", JSON.stringify({ ...postActive, tagged }));
+          const data = await makeRequestWithAuth(
+            "post",
+            "/api/v1/posts/upload-multer",
+            formData
+          );
+          setPosts((pre) => {
+            return [
+              {
+                ...data?.__post,
+                userId: {
+                  _id: user?._id,
+                  avatarUrl: user?.avatarUrl,
+                  fullName: user?.fullName,
+                },
+                reactions: [],
+              },
+              ...pre,
+            ];
+          });
+          onResetPostCreate();
+          if (postActive?.imageUrlPreview) {
+            URL.revokeObjectURL(postActive?.imageUrlPreview);
+          }
+        }
         onClose();
-        onResetEditorState();
         onCloseAddImage();
       }
     } catch (error) {
-      console.log({ error });
+      console.log(error);
     } finally {
       setIsLoadingUploadPost(false);
     }
   };
 
   useEffect(() => {
-    if (contentPost.background !== 0) {
-      setIsDisabled(true);
+    if (modeEditor === "edit") {
+      if (postEdit.background !== 0) {
+        setIsDisabled(true);
+      } else {
+        setIsDisabled(false);
+      }
     } else {
-      setIsDisabled(false);
+      if (postCreate.background !== 0) {
+        setIsDisabled(true);
+      } else {
+        setIsDisabled(false);
+      }
     }
-  }, [contentPost.background]);
+  }, [postCreate, postEdit, modeEditor]);
   return (
     <>
       <div className="flex flex-col w-full h-full rounded-lg bg-surface dark:bg-surfaceDark border border-divider dark:border-dividerDark overflow-x-hidden">
@@ -120,7 +153,9 @@ const FormDefault: FC<Props> = ({
         <div className="relative shrink-0 h-[60px] border-b border-divider dark:border-dividerDark">
           <div className="flex justify-center items-center w-full h-full">
             <h2 className="text-2024 font-bold text-primaryText dark:text-primaryTextDark">
-              <span>Tạo bài viết</span>
+              <span>
+                {modeEditor === "edit" ? "Chỉnh sửa bài viết" : "Tạo bài viết"}
+              </span>
             </h2>
 
             <div
@@ -137,7 +172,7 @@ const FormDefault: FC<Props> = ({
           <UserAndAudiance
             user={user as User}
             onOpenAudiance={onOpenAudianceForm}
-            headerPost={modeEditor === "edit" ? headerPostEdit : headerPost}
+            post={postActive}
             onOpenTagForm={onOpenTagForm}
           />
         </div>
@@ -168,8 +203,8 @@ const FormDefault: FC<Props> = ({
                 onOpenTagForm={onOpenTagForm}
                 onOpenFeelingForm={onOpenFeelingForm}
                 isActiveAddImage={isOpenAddImage}
-                isActiveTag={headerPost.tags.length > 0}
-                isActiveFeeling={!!headerPost.feelings}
+                isActiveTag={isActiveTag}
+                isActiveFeeling={isActiveFeeling}
               />
             </div>
           </div>
@@ -177,14 +212,13 @@ const FormDefault: FC<Props> = ({
           <div className="px-4 pt-4">
             <div
               className={`${
-                !(contentPost.content === JSON.stringify(defaultContent)) ||
-                !!imageUpload
-                  ? "bg-primary"
-                  : "bg-white/20"
+                conditionToActiveSubmit ? "bg-primary" : "bg-white/20"
               } flex items-center justify-center rounded-lg h-9 w-full px-3 text-primaryText dark:text-primaryTextDark cursor-pointer`}
               onClick={handleSubmitPost}
             >
-              <span className="text-1418 font-semibold">Đăng</span>
+              <span className="text-1418 font-semibold">
+                {modeEditor === "edit" ? "Lưu" : "Đăng"}
+              </span>
             </div>
           </div>
         </div>

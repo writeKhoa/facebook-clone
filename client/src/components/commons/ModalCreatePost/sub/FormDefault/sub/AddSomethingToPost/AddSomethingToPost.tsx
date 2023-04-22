@@ -14,13 +14,17 @@ interface Props {
 
 const AddSomethingToPost: FC<Props> = ({
   isDisabled,
-  onOpenAddImage,
-  onOpenTagForm,
-  onOpenFeelingForm,
   isActiveAddImage,
   isActiveFeeling,
   isActiveTag,
+  onOpenAddImage,
+  onOpenTagForm,
+  onOpenFeelingForm,
 }) => {
+  const handleAddImage = () => {
+    if (isDisabled) return;
+    onOpenAddImage();
+  };
   return (
     <div className="flex gap-1">
       <div
@@ -31,7 +35,7 @@ const AddSomethingToPost: FC<Props> = ({
             ? ""
             : "rounded-full hover:bg-black/10 dark:hover:bg-white/10"
         }`}
-        onClick={onOpenAddImage}
+        onClick={handleAddImage}
       >
         <PictureVideoIcon isDisabled={isDisabled} />
       </div>

@@ -1,11 +1,11 @@
-import React, { FC, useEffect, useState } from "react";
-import constants from "../../config/constants";
-import { HeaderReturn } from "../../commons";
-import { CloseIcon, FindIcon } from "@/components/commons/Icons";
-import { useAuth, useEditorPostState, usePosts } from "@/hooks";
-import { ShortProfileItem } from "@/models";
-import { LazyLoadImage } from "react-lazy-load-image-component";
 import { CustomScrollbar } from "@/components/commons";
+import { CloseIcon, FindIcon } from "@/components/commons/Icons";
+import { useAuth, usePosts } from "@/hooks";
+import { ShortProfileItem } from "@/models";
+import { FC, useEffect, useState } from "react";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import { HeaderReturn } from "../../commons";
+import constants from "../../config/constants";
 
 interface Props {
   onReturnDefault: () => void;
@@ -13,7 +13,8 @@ interface Props {
 
 const FormTag: FC<Props> = ({ onReturnDefault }) => {
   const { makeRequestWithAuth } = useAuth();
-  const { headerPost, onChangeTags, headerPostEdit, modeEditor } = usePosts();
+  const { modeEditor, postCreate, postEdit, setPostCreate, setPostEdit } =
+    usePosts();
   const [suggestUsers, setSuggestUsers] = useState<
     Map<string, ShortProfileItem>
   >(new Map());
@@ -26,7 +27,21 @@ const FormTag: FC<Props> = ({ onReturnDefault }) => {
         fullName: item.fullName,
       };
     });
-    onChangeTags(newTagged);
+    if (modeEditor === "edit") {
+      setPostEdit((pre) => {
+        return {
+          ...pre,
+          tags: newTagged,
+        };
+      });
+    } else {
+      setPostCreate((pre) => {
+        return {
+          ...pre,
+          tags: newTagged,
+        };
+      });
+    }
     onReturnDefault();
   };
 
@@ -58,7 +73,6 @@ const FormTag: FC<Props> = ({ onReturnDefault }) => {
     const getData = async () => {
       try {
         const data = await makeRequestWithAuth("get", "/api/v1/friends/list");
-
         const suggestMap = new Map<string, ShortProfileItem>();
         const taggedUsers: ShortProfileItem[] = [];
 
@@ -66,28 +80,34 @@ const FormTag: FC<Props> = ({ onReturnDefault }) => {
           const { friendId } = friend;
           suggestMap.set(friendId._id, friendId);
         });
-
-        // xu li remove item tagged from provider
         if (modeEditor === "edit") {
-          headerPostEdit?.tags.length > 0 &&
-            headerPostEdit.tags.forEach((item) => {
-              const taggedItem = suggestMap.get(item.tagId);
-              taggedUsers.push(taggedItem as ShortProfileItem);
-              suggestMap.delete(item.tagId);
-            });
-
-          setTaggedUsers(taggedUsers);
-          setSuggestUsers(suggestMap);
+          if (!!postEdit.tags) {
+            postEdit?.tags.length > 0 &&
+              postEdit.tags.forEach((item) => {
+                const taggedItem = suggestMap.get(item.tagId);
+                taggedUsers.push(taggedItem as ShortProfileItem);
+                suggestMap.delete(item.tagId);
+              });
+            setTaggedUsers(taggedUsers);
+            setSuggestUsers(suggestMap);
+          } else {
+            setTaggedUsers(taggedUsers);
+            setSuggestUsers(suggestMap);
+          }
         } else {
-          headerPost?.tags.length > 0 &&
-            headerPost.tags.forEach((item) => {
-              const taggedItem = suggestMap.get(item.tagId);
-              taggedUsers.push(taggedItem as ShortProfileItem);
-              suggestMap.delete(item.tagId);
-            });
-
-          setTaggedUsers(taggedUsers);
-          setSuggestUsers(suggestMap);
+          if (!!postCreate.tags) {
+            postCreate?.tags.length > 0 &&
+              postCreate?.tags.forEach((item) => {
+                const taggedItem = suggestMap.get(item.tagId);
+                taggedUsers.push(taggedItem as ShortProfileItem);
+                suggestMap.delete(item.tagId);
+              });
+            setTaggedUsers(taggedUsers);
+            setSuggestUsers(suggestMap);
+          } else {
+            setTaggedUsers(taggedUsers);
+            setSuggestUsers(suggestMap);
+          }
         }
       } catch (error) {
         console.log({ error });
@@ -110,7 +130,9 @@ const FormTag: FC<Props> = ({ onReturnDefault }) => {
       <div className="flex items-center px-4 h-[52px]">
         <div className="grow flex w-full h-9">
           <div className="flex items-center rounded-l-full w-4 pl-2.5 h-9 box-content bg-black/20 dark:bg-white/20 cursor-pointer">
-            <FindIcon />
+            <span className="text-primaryIcon dark:text-primaryIconDark">
+              <FindIcon />
+            </span>
           </div>
           <input
             type="text"

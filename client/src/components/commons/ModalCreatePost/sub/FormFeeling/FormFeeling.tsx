@@ -1,22 +1,48 @@
+import { CustomScrollbar } from "@/components/commons";
 import { FindIcon } from "@/components/commons/Icons";
-import React, { FC } from "react";
+import { feelings } from "@/configs";
+import { usePosts } from "@/hooks";
+import { FC } from "react";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 import { HeaderReturn } from "../../commons";
 import constant from "../../config/constants";
-import { feelings } from "@/configs";
-import { LazyLoadImage } from "react-lazy-load-image-component";
-import { CustomScrollbar } from "@/components/commons";
-import { useEditorPostState, usePosts } from "@/hooks";
 
 interface Props {
   onReturnDefault: () => void;
 }
 
 const FormFeeling: FC<Props> = ({ onReturnDefault }) => {
-  const { onChangeFeeling, headerPost, headerPostEdit, modeEditor } =
+  const { modeEditor, postCreate, postEdit, setPostCreate, setPostEdit } =
     usePosts();
 
   const handleSelectFeeling = (feel: number) => {
-    onChangeFeeling(feel);
+    if (modeEditor === "edit") {
+      setPostEdit((pre) => {
+        if (feel === pre?.feeling) {
+          return {
+            ...pre,
+            feeling: undefined,
+          };
+        }
+        return {
+          ...pre,
+          feeling: feel,
+        };
+      });
+    } else {
+      setPostCreate((pre) => {
+        if (feel === pre?.feeling) {
+          return {
+            ...pre,
+            feeling: undefined,
+          };
+        }
+        return {
+          ...pre,
+          feeling: feel,
+        };
+      });
+    }
     onReturnDefault();
   };
 
@@ -44,7 +70,9 @@ const FormFeeling: FC<Props> = ({ onReturnDefault }) => {
       <div className="flex items-center px-4 h-[52px]">
         <div className="grow flex w-full h-9">
           <div className="flex items-center rounded-l-full w-4 pl-2.5 h-9 box-content bg-black/20 dark:bg-white/20 cursor-pointer">
-            <FindIcon />
+            <span className="text-primaryIcon dark:text-primaryIconDark">
+              <FindIcon />
+            </span>
           </div>
           <input
             type="text"
@@ -59,9 +87,8 @@ const FormFeeling: FC<Props> = ({ onReturnDefault }) => {
           <ul className="grid grid-cols-2 w-full">
             {feelings.map((item, index) => {
               const feelCurrent =
-                modeEditor === "edit"
-                  ? headerPostEdit?.feelings
-                  : headerPost?.feelings;
+                modeEditor === "edit" ? postEdit.feeling : postCreate.feeling;
+
               return (
                 <li
                   key={item.title}

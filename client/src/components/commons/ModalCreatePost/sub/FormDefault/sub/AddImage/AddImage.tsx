@@ -8,8 +8,16 @@ interface Props {
 }
 
 const AddImage: FC<Props> = ({ onClose }) => {
-  const { onChangeImage, imagePreview, imageEdit, modeEditor } = usePosts();
+  const { modeEditor, postCreate, postEdit, setPostCreate, setPostEdit } =
+    usePosts();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const preImageEdit = postEdit.hasPreImageUrl ? postEdit.preImageUrl : "";
+  const imagePreview =
+    modeEditor === "edit"
+      ? postEdit.imageUrlPreview ||
+        (postEdit.isDiscardOldImage ? postEdit.imageUrlPreview : preImageEdit)
+      : postCreate.imageUrlPreview;
 
   const handleClickDiv = () => {
     if (inputRef.current) {
@@ -19,15 +27,72 @@ const AddImage: FC<Props> = ({ onClose }) => {
 
   const handleOnChangeFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-
     if (file) {
       const imagePreview = URL.createObjectURL(file);
-      onChangeImage(imagePreview, file);
+      if (modeEditor === "edit") {
+        setPostEdit((pre) => {
+          return {
+            ...pre,
+            imageUpload: file,
+            imageUrlPreview: imagePreview,
+          };
+        });
+      } else {
+        setPostCreate((pre) => {
+          return {
+            ...pre,
+            imageUpload: file,
+            imageUrlPreview: imagePreview,
+          };
+        });
+      }
     }
   };
 
   const handleClose = () => {
-    onChangeImage("", null);
+    if (modeEditor === "edit") {
+      if (postEdit.hasPreImageUrl) {
+        if (postEdit.isDiscardOldImage) {
+          setPostEdit((pre) => {
+            return {
+              ...pre,
+              imageUpload: null,
+              imageUrlPreview: "",
+            };
+          });
+        } else {
+          setPostEdit((pre) => {
+            return {
+              ...pre,
+              isDiscardOldImage: true,
+            };
+          });
+        }
+      } else {
+        if (postEdit?.imageUrlPreview) {
+          URL.revokeObjectURL(postEdit?.imageUrlPreview);
+          setPostEdit((pre) => {
+            return {
+              ...pre,
+              imageUpload: null,
+              imageUrlPreview: "",
+            };
+          });
+        }
+      }
+    } else {
+      if (postCreate?.imageUrlPreview) {
+        URL.revokeObjectURL(postCreate?.imageUrlPreview);
+      }
+      setPostCreate((pre) => {
+        return {
+          ...pre,
+
+          imageUpload: null,
+          imageUrlPreview: "",
+        };
+      });
+    }
     onClose();
   };
 
@@ -41,11 +106,8 @@ const AddImage: FC<Props> = ({ onClose }) => {
           <CloseIcon width={16} height={16} />
         </div>
 
-        {!!imageEdit || !!imagePreview ? (
-          <img
-            src={modeEditor === "edit" ? imageEdit : imagePreview}
-            className="rounded-lg w-full h-full"
-          />
+        {!!imagePreview ? (
+          <img src={imagePreview} className="rounded-lg w-full h-full" />
         ) : (
           <div
             className="w-full h-full bg-black/5 dark:bg-white/5 rounded-lg cursor-pointer hover:bg-black/20 dark:hover:bg-white/20"
