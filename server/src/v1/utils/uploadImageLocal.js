@@ -1,9 +1,16 @@
 const multer = require("multer");
 const crypto = require("crypto");
+const fs = require("fs");
+
+const uploadDir = "./public";
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./public");
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix =

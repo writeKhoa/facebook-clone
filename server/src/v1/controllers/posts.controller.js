@@ -4,6 +4,8 @@ const path = require("path");
 const { URL } = require("url");
 const sharp = require("sharp");
 
+const resizedDir = "./public/resized";
+
 const that = {
   myPosts: async (req, res) => {
     try {
@@ -281,6 +283,10 @@ const that = {
         return res.status(200).json({ data: { __post: newPost } });
       }
 
+      if (!fs.existsSync(resizedDir)) {
+        fs.mkdirSync(resizedDir);
+      }
+
       await sharp(req.file.path)
         .resize(400, 400)
         .jpeg({ quality: 90 })
@@ -311,8 +317,8 @@ const that = {
 
       return res.status(200).json({ data: { __post: newPost } });
     } catch (error) {
+      console.log(error);
       if (req.file.path) {
-        console.log("delete image");
         fs.unlinkSync(req.file.path);
       }
       return res.status(500).json({ error: error.message });
