@@ -18,7 +18,6 @@ interface Props {
 }
 
 const Options: FC<Props> = ({ view, isPinned, _id, where, onClose }) => {
-  console.log("init options");
   const { makeRequestWithAuth } = useAuth();
   const {
     posts,

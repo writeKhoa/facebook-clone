@@ -14,7 +14,6 @@ interface Props {
   mode: number;
 }
 const Overview: FC<Props> = ({ profile, mode }) => {
-  console.log({ profile }, mode, "tu overview other profile");
   const { _id, backgroundUrl, friends, fullName, mediumAvatarUrl } = profile;
   return (
     <div className="bg-surface dark:bg-surfaceDark">

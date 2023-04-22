@@ -14,10 +14,8 @@ interface Props {
 const PostList: FC<Props> = memo(({ posts, pinPostId, filter }) => {
   const [renderedCount, setRenderCount] = useState(10);
   const getPosts = () => {
-    console.log("get more post");
     setRenderCount((pre) => pre + 10);
   };
-  console.log("other profile total posts ", posts.length);
   return (
     <InfiniteScroll
       dataLength={renderedCount}
