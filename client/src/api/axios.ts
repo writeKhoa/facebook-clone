@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseUrl = import.meta.env.VITE_BASE_URL || "http://localhost:3333/";
+const baseUrl = import.meta.env.VITE_BASE_URL;
 
 const axiosClient = axios.create({
   baseURL: baseUrl,
@@ -18,10 +18,8 @@ export const makeRequestWithAccessToken = (accessToken: string) => {
   }
 };
 
-axiosClient.interceptors.response.use(
-  function (config) {
-    return config.data;
-  },
-);
+axiosClient.interceptors.response.use(function (config) {
+  return config.data;
+});
 
 export default axiosClient;
