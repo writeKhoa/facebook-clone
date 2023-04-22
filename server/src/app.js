@@ -37,20 +37,9 @@ app.use(
 
 connectMongodb();
 
-function wait() {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve("resolved");
-    }, 4000);
-  });
-}
-
 app.use("/api/v1", require("./v1/routes"));
-app.use("/api/v1/test/v", async (req, res) => {
-  try {
-    await wait();
-    return res.status(200).json({ data: "co cai gi dau maf lay" });
-  } catch (error) {}
+app.get("/", async (req, res) => {
+  return res.status(200).json({ data: "deploy successed" });
 });
 
 app.use("*", (req, res) => {
