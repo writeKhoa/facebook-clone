@@ -203,7 +203,11 @@ const that = {
       const user = req.user;
       const newUser = new users({ ...user });
       await newUser.save();
-      return res.status(200).json({});
+      return res.status(200).json({
+        data: {
+          __message: "Register sussecced",
+        },
+      });
     } catch (error) {
       console.log({ error });
       return res.status(500).json({ error: error.message });
