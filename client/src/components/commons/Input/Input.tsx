@@ -31,8 +31,9 @@ const Input: FC<Props> = ({
       onChange={onChange}
       onFocus={onFocus}
       type={type}
-      className={`w-full h-full rounded-md border-[1px] border-divider focus:outline-none focus:border-primary placeholder:text-secondaryIcon ${sizeInput}`}
+      className={`w-full h-full rounded-md border border-divider focus:outline-none focus:border-primary placeholder:text-secondaryIcon ${sizeInput}`}
       placeholder={placeholder}
+      autoComplete=""
       {...passProps}
     />
   );

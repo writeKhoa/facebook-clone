@@ -14,7 +14,6 @@ const Content2: FC<Props> = ({ background, content }) => {
   const srcBg = (backgrounds[background] as Background2Props)?.srcBg;
 
   if (!!color) {
-    console.log("render color");
     return (
       <div
         className="relative w-full"

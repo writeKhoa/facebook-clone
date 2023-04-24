@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { Link } from "react-router-dom";
 import { generateRandomId } from "@/utils";
-import { emotiConfig, emojiConfig } from "@/configs";
+import { emojiConfig } from "@/configs";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 interface Text {
   detail: number;
@@ -37,6 +37,7 @@ const JsonToHtml: FC<Props> = ({ content }) => {
                       case "text":
                         return <span>{text.text}</span>;
                       case "hashtag":
+                        console.log(text);
                         return (
                           <span className="text-primary">{text.text}</span>
                         );

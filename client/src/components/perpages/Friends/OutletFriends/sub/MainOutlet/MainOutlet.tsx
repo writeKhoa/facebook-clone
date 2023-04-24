@@ -125,7 +125,7 @@ const MainOutlet = () => {
     };
   }, []);
   return (
-    <div className="p-5">
+    <div className="p-5 bg-space dark:bg-spaceDark">
       <div>
         <div className="w-full pb-4">
           <div className="flex pt-5 pb-1">

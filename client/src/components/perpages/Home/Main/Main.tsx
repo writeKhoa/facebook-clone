@@ -63,6 +63,7 @@ const Main: FC<Props> = ({ postsProps }) => {
 
   const handleOpenFeeling = () => {
     setIsOpenEditor((pre) => !pre);
+    setModeEditor("create");
     setFormActive("feeling");
   };
 

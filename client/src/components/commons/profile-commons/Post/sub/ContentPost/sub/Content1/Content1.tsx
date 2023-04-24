@@ -14,7 +14,7 @@ const Content1: FC<Props> = ({ content, imageUrl }) => {
         <JsonToHtml content={content} />
       </div>
       {imageUrl ? (
-        <div>
+        <div style={{ maxWidth: 590, maxHeight: 590 }}>
           <LazyLoadImage
             className="w-full mx-auto"
             width={590}

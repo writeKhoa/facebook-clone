@@ -96,6 +96,7 @@ const Provider: FC<Props> = ({ children }) => {
           background,
           content,
           imageUrl,
+          publicId,
         } = newPostEdit;
         setPostEdit({
           _id,
@@ -107,6 +108,7 @@ const Provider: FC<Props> = ({ children }) => {
           format,
 
           preImageUrl: imageUrl,
+          prePublicId: publicId,
           isDiscardOldImage: false,
           hasPreImageUrl: !!imageUrl,
           imageUrlPreview: "",

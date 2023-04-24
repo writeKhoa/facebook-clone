@@ -27,6 +27,7 @@ export interface PostProps {
   content: string;
   format: 1 | 2;
   imageUrl?: string;
+  publicId?: string;
 
   sharePostId?: PostProps;
 
@@ -59,6 +60,7 @@ export interface PostEditProps {
   format: 1 | 2;
 
   preImageUrl?: string;
+  prePublicId?: string;
   isDiscardOldImage: boolean;
   hasPreImageUrl: boolean;
   imageUrlPreview?: string;

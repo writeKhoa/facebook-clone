@@ -94,6 +94,7 @@ const RegisterForm = () => {
         pronounce: undefined,
         pronounceCustom: "",
       });
+
       setErrorMsg("");
       setIsOpenRegisterSuccess(true);
     } catch (error) {

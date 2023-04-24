@@ -52,6 +52,10 @@ const postsSchema = Schema(
       },
     },
 
+    publicId: {
+      type: String,
+    },
+
     sharePostId: {
       type: { type: Schema.Types.ObjectId, ref: "posts" },
     },

@@ -1,8 +1,6 @@
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
 
-
-
 const nodeEnv = process.env.NODE_ENV;
 const cloudName = process.env.CLOUD_NAME;
 const apiKey = process.env.API_KEY;
@@ -69,4 +67,43 @@ const uploadTwoImageToCloundinary = async (image50x50, image180x180) => {
   }
 };
 
-module.exports = { uploadTwoImageToCloundinary };
+const uploadImageSize400x400ToCloundinary = async (image400x400) => {
+  try {
+    const [image400x400Result] = await Promise.all([
+      new Promise((resolve, reject) => {
+        const cld_upload_stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "posts",
+            ...options,
+          },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          }
+        );
+        streamifier.createReadStream(image400x400).pipe(cld_upload_stream);
+      }),
+    ]);
+
+    return [image400x400Result];
+  } catch (error) {
+    throw error;
+  }
+};
+
+const deleteImageFromCloudinary = async (publicId) => {
+  try {
+    await cloudinary.uploader.destroy(publicId);
+  } catch (error) {
+    throw error;
+  }
+};
+
+module.exports = {
+  uploadTwoImageToCloundinary,
+  uploadImageSize400x400ToCloundinary,
+  deleteImageFromCloudinary,
+};

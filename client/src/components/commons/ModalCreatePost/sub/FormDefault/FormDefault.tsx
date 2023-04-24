@@ -30,7 +30,6 @@ const FormDefault: FC<Props> = ({
   onCloseAddImage,
   onClose,
 }) => {
-  console.log("isOpen image ", isOpenAddImage);
   const { user, makeRequestWithAuth } = useAuth();
   const { modeEditor, postCreate, postEdit, setPosts, onResetPostCreate } =
     usePosts();

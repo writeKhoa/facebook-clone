@@ -1,10 +1,11 @@
 const { posts, friends, users } = require("../models");
 const fs = require("fs");
-const path = require("path");
 const { URL } = require("url");
 const sharp = require("sharp");
-
-const resizedDir = "./public/resized";
+const {
+  uploadImageSize400x400ToCloundinary,
+  deleteImageFromCloudinary,
+} = require("../services/uploadImage.cloudinary");
 
 const that = {
   myPosts: async (req, res) => {
@@ -268,59 +269,49 @@ const that = {
     try {
       const id = req.id;
       const { post } = req.body;
-
       const postObject = JSON.parse(post);
-      const url = req.protocol + "://" + req.get("host");
 
-      const filename = req?.file?.filename;
-
-      if (!filename) {
+      // has image
+      if (!!req.file.path) {
+        const imageBuffer = await sharp(req.file.path).toBuffer();
+        fs.unlinkSync(req.file.path);
+        const [image400x400] = await Promise.all([
+          sharp(imageBuffer).resize(400, 400).jpeg().toBuffer(),
+        ]);
+        const [image400x400Result] = await uploadImageSize400x400ToCloundinary(
+          image400x400
+        );
         const newPost = new posts({
           userId: id,
           ...postObject,
+          imageUrl: image400x400Result.secure_url,
+          publicId: image400x400Result.public_id,
         });
         await newPost.save();
+        await users.findByIdAndUpdate(id, {
+          $push: {
+            imageUrlList: {
+              $each: [
+                {
+                  imgUrl: image400x400Result.secure_url,
+                  postId: newPost._id,
+                },
+              ],
+              $position: 0,
+            },
+          },
+        });
         return res.status(200).json({ data: { __post: newPost } });
       }
 
-      if (!fs.existsSync(resizedDir)) {
-        fs.mkdirSync(resizedDir);
-      }
-
-      await sharp(req.file.path)
-        .resize(400, 400)
-        .jpeg({ quality: 90 })
-        .toFile(path.resolve(req.file.destination, "resized", filename));
-      fs.unlinkSync(req.file.path);
-
-      const imgUrl = url + "/public/resized/" + filename;
-
+      // todo not image upload
       const newPost = new posts({
         userId: id,
         ...postObject,
-        imageUrl: imgUrl,
       });
       await newPost.save();
-      await users.findByIdAndUpdate(id, {
-        $push: {
-          imageUrlList: {
-            $each: [
-              {
-                imgUrl,
-                postId: newPost._id,
-              },
-            ],
-            $position: 0,
-          },
-        },
-      });
-
       return res.status(200).json({ data: { __post: newPost } });
     } catch (error) {
-      console.log(error);
-      if (req.file.path) {
-        fs.unlinkSync(req.file.path);
-      }
       return res.status(500).json({ error: error.message });
     }
   },
@@ -329,25 +320,23 @@ const that = {
     try {
       const id = req.id;
       const { post } = req.body;
-      const filename = req?.file?.filename;
+      const filePath = req?.file?.path;
 
       const postObject = JSON.parse(post);
-      const url = req.protocol + "://" + req.get("host");
 
-      // todo remove old image
+      // todo if remove old image url
       if (postObject.isDiscardOldImage) {
         const imageUrl = postObject.preImageUrl;
-        const parsedUrl = new URL(imageUrl);
-        const srcPath = path.join(__dirname, "../../../");
-        const oldImagePath = path.join(srcPath, parsedUrl.pathname);
-
-        fs.unlinkSync(oldImagePath);
+        const publicId = postObject.prePublicId;
 
         await users.findByIdAndUpdate(id, {
           $pull: { imageUrlList: { imgUrl: imageUrl } },
         });
 
-        if (!filename) {
+        await deleteImageFromCloudinary(publicId);
+
+        // todo if not filePath from client
+        if (!filePath) {
           const doc = await posts.findByIdAndUpdate(
             postObject._id,
             {
@@ -363,19 +352,21 @@ const that = {
           });
         }
 
-        await sharp(req.file.path)
-          .resize(400, 400)
-          .jpeg({ quality: 90 })
-          .toFile(path.resolve(req.file.destination, "resized", filename));
-        fs.unlinkSync(req.file.path);
-
-        const imgUrl = url + "/public/resized/" + filename;
-
+        // todo if has filePath from client
+        const imageBuffer = await sharp(filePath).toBuffer();
+        fs.unlinkSync(filePath);
+        const [image400x400] = await Promise.all([
+          sharp(imageBuffer).resize(400, 400).jpeg().toBuffer(),
+        ]);
+        const [image400x400Result] = await uploadImageSize400x400ToCloundinary(
+          image400x400
+        );
         const doc = await posts.findByIdAndUpdate(
           postObject._id,
           {
             ...postObject,
-            imageUrl: imgUrl,
+            imageUrl: image400x400Result.secure_url,
+            publicId: image400x400Result.public_id,
           },
           {
             new: true,
@@ -386,7 +377,7 @@ const that = {
             imageUrlList: {
               $each: [
                 {
-                  imgUrl,
+                  imgUrl: image400x400Result.secure_url,
                   postId: postObject._id,
                 },
               ],
@@ -401,7 +392,8 @@ const that = {
         });
       }
 
-      if (!filename) {
+      // todo if only update post not image
+      if (!filePath) {
         const doc = await posts.findByIdAndUpdate(
           postObject._id,
           {
@@ -416,19 +408,22 @@ const that = {
         });
       }
 
-      await sharp(req.file.path)
-        .resize(400, 400)
-        .jpeg({ quality: 90 })
-        .toFile(path.resolve(req.file.destination, "resized", filename));
-      fs.unlinkSync(req.file.path);
-
-      const imgUrl = url + "/public/resized/" + filename;
+      // todo if update image
+      const imageBuffer = await sharp(filePath).toBuffer();
+      fs.unlinkSync(filePath);
+      const [image400x400] = await Promise.all([
+        sharp(imageBuffer).resize(400, 400).jpeg().toBuffer(),
+      ]);
+      const [image400x400Result] = await uploadImageSize400x400ToCloundinary(
+        image400x400
+      );
 
       const doc = await posts.findByIdAndUpdate(
         postObject._id,
         {
           ...postObject,
-          imageUrl: imgUrl,
+          imageUrl: image400x400Result.secure_url,
+          publicId: image400x400Result.public_id,
         },
         {
           new: true,
@@ -439,7 +434,7 @@ const that = {
           imageUrlList: {
             $each: [
               {
-                imgUrl,
+                imgUrl: image400x400Result.secure_url,
                 postId: postObject._id,
               },
             ],
@@ -467,19 +462,13 @@ const that = {
 
       const docDeleted = await posts.findByIdAndRemove(postId);
       if (docDeleted.imageUrl) {
-        const imageUrl = docDeleted.imageUrl;
-        const parsedUrl = new URL(imageUrl);
-        const srcPath = path.join(__dirname, "../../../");
-        const imagePath = path.join(srcPath, parsedUrl.pathname);
-        fs.unlink(imagePath, (err) => {
-          if (err) {
-            return;
-          }
-        });
+        const imagePublicId = docDeleted.publicId;
+        await deleteImageFromCloudinary(imagePublicId);
       }
       await users.findByIdAndUpdate(id, {
         $pull: { imageUrlList: { postId } },
       });
+
       return res.status(200).json();
     } catch (error) {
       return res.status(500).json({ error: error.message });

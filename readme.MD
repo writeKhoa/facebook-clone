@@ -1,4 +1,0 @@
-- audianceRule:
-  - 0: chỉ mình tôi
-  - 1: bạn bè
-  - 2: global
