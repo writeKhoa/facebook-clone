@@ -324,8 +324,9 @@ const that = {
   updateAvatar: async function (req, res) {
     try {
       const id = req.id;
-      const imageBuffer = await sharp(req.file.path).toBuffer();
-      fs.unlinkSync(req.file.path);
+      const imagePath = req?.file?.path;
+      const imageBuffer = await sharp(imagePath).toBuffer();
+      fs.unlinkSync(imagePath);
 
       const [image50x50, image180x180] = await Promise.all([
         sharp(imageBuffer).resize(50, 50).jpeg().toBuffer(),
@@ -338,10 +339,15 @@ const that = {
       await users.findByIdAndUpdate(id, {
         avatarUrl: image50x50Result.secure_url,
         mediumAvatarUrl: image180x180Result.secure_url,
-        imageUrlList: {
-          $push: {
-            imgUrl: image180x180Result.secure_url,
-            postId: crypto.randomUUID(),
+        $push: {
+          imageUrlList: {
+            $each: [
+              {
+                imgUrl: image180x180Result.secure_url,
+                postId: image180x180Result.public_id,
+              },
+            ],
+            $position: 0,
           },
         },
       });
@@ -355,6 +361,7 @@ const that = {
         },
       });
     } catch (error) {
+      console.log(error);
       return res.status(500).json({ error: error.message });
     }
   },

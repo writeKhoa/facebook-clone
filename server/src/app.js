@@ -6,25 +6,17 @@ const cookieParser = require("cookie-parser");
 const { connectMongodb } = require("./v1/helpers");
 dotenv.config();
 
-const origins = [
-  process.env.CLIENT_URL,
-  "http://127.0.0.1:5173",
-  "http://localhost:5173",
-  "http://localhost:8080",
-  "http://127.0.0.1:8080",
-];
+const origins = [process.env.CLIENT_URL];
 
 const app = express();
 
 app.use(morgan("dev"));
-app.use("/public", express.static("public"));
 app.use(express.json({ limit: "25mb" }));
 app.use(express.urlencoded({ limit: "25mb", extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
     origin: origins,
-    methods: "GET, POST, PUT, DELETE",
     optionsSuccessStatus: 200,
     credentials: true,
   })

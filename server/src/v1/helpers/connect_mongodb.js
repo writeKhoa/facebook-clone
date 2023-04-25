@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 
 dotenv.config();
 
-const mongUri = process.env.MONGO_URI;
+const mongUri = "mongodb://localhost:27017/facebook";
 
 const connectMongodb = async () => {
   try {

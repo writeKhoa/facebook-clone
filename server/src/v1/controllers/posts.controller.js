@@ -270,11 +270,12 @@ const that = {
       const id = req.id;
       const { post } = req.body;
       const postObject = JSON.parse(post);
+      const imagePath = req?.file?.path;
 
       // has image
-      if (!!req.file.path) {
-        const imageBuffer = await sharp(req.file.path).toBuffer();
-        fs.unlinkSync(req.file.path);
+      if (!!imagePath) {
+        const imageBuffer = await sharp(imagePath).toBuffer();
+        fs.unlinkSync(imagePath);
         const [image400x400] = await Promise.all([
           sharp(imageBuffer).resize(400, 400).jpeg().toBuffer(),
         ]);
@@ -312,6 +313,7 @@ const that = {
       await newPost.save();
       return res.status(200).json({ data: { __post: newPost } });
     } catch (error) {
+      console.log(error);
       return res.status(500).json({ error: error.message });
     }
   },
