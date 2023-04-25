@@ -263,11 +263,12 @@ export default function NewMentionsPlugin(): JSX.Element | null {
         const data = await makeRequestWithAuth("get", "/api/v1/friends/list");
 
         const friendsList =
-          data.__friendList.length > 0 &&
-          data.__friendList.map((friend: any) => {
-            const { friendId } = friend;
-            return friendId;
-          });
+          data.__friendList.length > 0
+            ? data.__friendList.map((friend: any) => {
+                const { friendId } = friend;
+                return friendId;
+              })
+            : [];
         setFriends([...friendsList]);
       } catch (error) {
         console.log({ error });

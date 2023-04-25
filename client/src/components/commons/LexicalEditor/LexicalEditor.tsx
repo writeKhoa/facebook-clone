@@ -49,7 +49,7 @@ const LexicalEditor: FC<Props> = ({ isOpenAddImage }) => {
             <ContentEditable
               className={`${
                 post.background !== 0 ? "" : "px-5"
-              } " w-full min-h-[40px] outline-none overflow-hidden text-ellipsis text-2024"`}
+              } w-full min-h-[40px] outline-none overflow-hidden text-ellipsis text-2024`}
             />
           }
           placeholder={

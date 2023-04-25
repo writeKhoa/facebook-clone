@@ -48,6 +48,7 @@ const Main: FC<Props> = ({ postsProps }) => {
     posts,
     isOpenEditor,
     setPosts,
+    onResetPostCreate,
     setIsOpenEditor,
     setModeEditor,
     setFormActive,
@@ -109,6 +110,13 @@ const Main: FC<Props> = ({ postsProps }) => {
       setIsNoMorePosts(true);
     }
   }, [postsProps]);
+
+  useEffect(() => {
+    return () => {
+      setPosts([]);
+      onResetPostCreate();
+    };
+  }, []);
 
   return (
     <div className="w-full bg-space dark:bg-spaceDark">
