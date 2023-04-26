@@ -22,12 +22,17 @@ export const processCount = (count: number) => {
 };
 
 export const getObject = (userId: string, reactions: ReactionProps[]) => {
+  console.log(reactions);
   if (!!reactions) {
+    console.log("vao route reactions");
     const isReacted = reactions.find((item) => {
+      console.log(item.userId, { userId });
       return item.userId === userId;
     });
 
-    if (isReacted) {
+    console.log(isReacted);
+
+    if (!!isReacted) {
       return {
         isReacted: true,
         typeReaction: isReacted.typeReaction,

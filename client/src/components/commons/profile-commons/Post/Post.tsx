@@ -13,6 +13,7 @@ interface Props {
 
 const Post: FC<Props> = ({ post, view, isPinned, where }) => {
   const { user } = useAuth();
+  console.log(user);
   const {
     _id,
     userId,
@@ -79,7 +80,7 @@ const Post: FC<Props> = ({ post, view, isPinned, where }) => {
       <InteractPost
         countReaction={countReaction}
         countTypeReaction={countTypeReaction}
-        isReacted={getObject(userId?._id, reactions)}
+        isReacted={getObject(user?._id || "", reactions)}
         userId={user?._id as string}
         postId={_id}
         view={view}

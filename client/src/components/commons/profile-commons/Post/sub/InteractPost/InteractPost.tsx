@@ -5,7 +5,6 @@ import {
 } from "@/components/commons/Icons";
 import { reactedEmotions, reactEmotions, reactEmotionSvg } from "@/configs";
 import { useAuth } from "@/hooks";
-import { ReactionProps } from "@/models";
 import { processCount, sortTheMostTypeReactions } from "@/utils";
 import { FC, useEffect, useRef, useState } from "react";
 import { ViewDetailReaction } from "./sub";
